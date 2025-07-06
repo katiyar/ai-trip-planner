@@ -13,18 +13,37 @@ import {
   CardContent,
   Chip
 } from '@mui/material';
-import { Flight, TravelExplore } from '@mui/icons-material';
-import TripPlannerForm from './components/TripPlannerForm';
-import TripResults from './components/TripResults';
-import { TripRequest, TripResponse } from './types/trip';
+import { RssFeed, Article } from '@mui/icons-material';
+import NewsConfigForm from './components/NewsConfigForm';
+import NewsResults from './components/NewsResults';
+
+// Define types for news functionality
+interface NewsRequest {
+  interests: string[];
+  num_articles: number;
+  sources?: string[];
+}
+
+interface ArticleType {
+  title: string;
+  summary: string;
+  url: string;
+  source: string;
+  relevance_score: number;
+  published_at: string;
+}
+
+interface NewsResponse {
+  articles: ArticleType[];
+}
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
+      main: '#1565c0', // News blue
     },
     secondary: {
-      main: '#dc004e',
+      main: '#ef6c00', // Orange accent
     },
     background: {
       default: '#f5f5f5',
@@ -41,40 +60,40 @@ const theme = createTheme({
 });
 
 function App() {
-  const [tripResponse, setTripResponse] = useState<TripResponse | null>(null);
+  const [newsResponse, setNewsResponse] = useState<NewsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handlePlanTrip = async (tripRequest: TripRequest) => {
+  const handleGetNews = async (newsRequest: NewsRequest) => {
     setLoading(true);
     setError(null);
-    setTripResponse(null);
+    setNewsResponse(null);
 
     try {
-      const response = await fetch('http://localhost:8000/plan-trip', {
+      const response = await fetch('http://localhost:8000/get-news', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(tripRequest),
+        body: JSON.stringify(newsRequest),
       });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data: TripResponse = await response.json();
-      setTripResponse(data);
+      const data: NewsResponse = await response.json();
+      setNewsResponse(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
-      console.error('Error planning trip:', err);
+      console.error('Error fetching news:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleNewTrip = () => {
-    setTripResponse(null);
+  const handleNewRequest = () => {
+    setNewsResponse(null);
     setError(null);
   };
 
@@ -84,11 +103,11 @@ function App() {
       <Box sx={{ flexGrow: 1, minHeight: '100vh' }}>
         <AppBar position="static" elevation={0}>
           <Toolbar>
-            <TravelExplore sx={{ mr: 2 }} />
+            <RssFeed sx={{ mr: 2 }} />
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              AI Trip Planner
+              Personalized News Agent
             </Typography>
-            <Flight />
+            <Article />
           </Toolbar>
         </AppBar>
 
@@ -98,16 +117,16 @@ function App() {
             sx={{
               p: 4,
               mb: 4,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
               color: 'white'
             }}
           >
             <Typography variant="h3" component="h1" gutterBottom align="center">
-              Plan Your Perfect Trip
+              Your Personalized News Feed
             </Typography>
             <Typography variant="h6" align="center" sx={{ opacity: 0.9 }}>
-              Let our AI agents help you discover amazing destinations, create itineraries,
-              manage budgets, and find local experiences
+              Get the top 3 articles curated just for your interests every day.
+              Stay informed without the noise.
             </Typography>
           </Paper>
 
@@ -117,10 +136,10 @@ function App() {
               <Card sx={{ height: '100%', textAlign: 'center', p: 2 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    🔍 Research
+                    🔍 Smart Curation
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Discover destinations, weather, attractions, and local culture
+                    AI-powered filtering finds the most relevant articles for your interests
                   </Typography>
                 </CardContent>
               </Card>
@@ -129,10 +148,10 @@ function App() {
               <Card sx={{ height: '100%', textAlign: 'center', p: 2 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    📅 Itineraries
+                    📊 Relevance Scoring
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Get detailed day-by-day travel plans and schedules
+                    Each article is scored for relevance to your specific interests
                   </Typography>
                 </CardContent>
               </Card>
@@ -141,10 +160,10 @@ function App() {
               <Card sx={{ height: '100%', textAlign: 'center', p: 2 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    💰 Budget
+                    🌐 Multi-Source
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Smart budget planning and money-saving tips
+                    Aggregates from multiple reputable news sources and publications
                   </Typography>
                 </CardContent>
               </Card>
@@ -153,10 +172,10 @@ function App() {
               <Card sx={{ height: '100%', textAlign: 'center', p: 2 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    🍽️ Local
+                    ⚡ Real-time
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Authentic experiences and hidden gems
+                    Fresh articles updated throughout the day as news breaks
                   </Typography>
                 </CardContent>
               </Card>
@@ -168,9 +187,9 @@ function App() {
             <Box sx={{ flex: '0 0 auto', width: { xs: '100%', md: '400px' } }}>
               <Paper sx={{ p: 3 }}>
                 <Typography variant="h5" gutterBottom>
-                  Plan Your Trip
+                  Configure Your News
                 </Typography>
-                <TripPlannerForm onSubmit={handlePlanTrip} loading={loading} />
+                <NewsConfigForm onSubmit={handleGetNews} loading={loading} />
               </Paper>
             </Box>
 
@@ -184,29 +203,20 @@ function App() {
                 </Paper>
               )}
 
-              {tripResponse && (
+              {newsResponse && (
                 <Paper sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h5" gutterBottom>
-                      Your Trip Plan
-                    </Typography>
-                    <Chip
-                      label={tripResponse.agent_type}
-                      color="primary"
-                      variant="outlined"
-                    />
-                  </Box>
-                  <TripResults response={tripResponse} onNewTrip={handleNewTrip} />
+                  <NewsResults response={newsResponse} onNewRequest={handleNewRequest} />
                 </Paper>
               )}
 
-              {!tripResponse && !loading && !error && (
+              {!newsResponse && !loading && !error && (
                 <Paper sx={{ p: 6, textAlign: 'center', bgcolor: 'grey.50' }}>
+                  <RssFeed sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
                   <Typography variant="h6" color="text.secondary">
-                    Fill out the form to get your personalized trip plan
+                    Select your interests to get personalized news
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Our AI agents will analyze your preferences and create the perfect itinerary
+                    Our AI will curate the most relevant articles just for you
                   </Typography>
                 </Paper>
               )}
